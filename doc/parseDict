@@ -1,0 +1,5 @@
+Name:loadTextDict(fileName)
+Function:加载语料库
+Parameter:语料库文件名称（默认当前文件夹下）
+Return:包含该语料库的tuple
+Example:

@@ -1,0 +1,47 @@
+Name:ruleOneTest(a, i)
+Function: 对应于论文的第一条规则
+Parameter:
+Return:
+Example:
+
+Name:ruleTwoTest(a, i)
+Function: 对应于论文的第二条规则
+Parameter:
+Return:
+Example:
+
+Name:ruleThrTest(a, i)
+Function: 对应于论文的第三条规则
+Parameter:
+Return:
+Example:
+
+Name:ruleFourTest(a, i)
+Function: 对应于论文的第四条规则
+Parameter:
+Return:
+Example:
+
+Name:ruleParse(a, i)
+Function:
+Parameter:
+Return:
+Example:
+
+Name:loadList()
+Function:
+Parameter:
+Return:
+Example:
+
+Name:sentiment_score_list(dataset, posChList, posSentimentChList, negChList, negSentimentChList)
+Function:
+Parameter:
+Return:
+Example:
+
+Name:main()
+Function:
+Parameter:
+Return:
+Example:
