@@ -52,8 +52,6 @@ def ruleTwoTest(a, i):
         if dd and dd1: #确保target和sentiment都有值
             print u'规则二处理'
             print u'评价对象词：',
-            # for k in target:
-            #     print k,
             print target[0]
             print  u'情感评价词为：',
             # for k in sentiment:
