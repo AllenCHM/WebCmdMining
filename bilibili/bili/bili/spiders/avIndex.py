@@ -7,6 +7,7 @@ import json
 import pymongo
 from scrapy import Request
 import time
+from datetime import datetime
 
 class AvIndexWebScrapy(BaseSpider):
     name = u'AvIndex'
@@ -27,7 +28,8 @@ class AvIndexWebScrapy(BaseSpider):
             tmp = json.loads(response.body)
             if tmp[u'list']:
                 for k in tmp[u'list']:
-                    k.update({u'downloadTime': time.time()})
+                    # k.update({u'downloadTime': time.time()})
+                    k.update({u'downloadTime': str(datetime.now())})
                     self.doc.update({u'aid': k[u'aid']}, k, True)
         except:
             pass
