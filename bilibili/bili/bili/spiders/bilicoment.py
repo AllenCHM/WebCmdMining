@@ -14,7 +14,7 @@ class BilibiCommScrapy(BaseSpider):
     allowed_domains = [u'bilibili.com', ]
 
     def __init__(self):
-        self.connectionMongoDB = pymongo.MongoClient(host='192.168.2.165', port=27017)
+        self.connectionMongoDB = pymongo.MongoClient(host='192.168.0.8', port=27017)
         self.db = self.connectionMongoDB['bilibili']
         self.doc = self.db["avIndex"]
         self.avCommentDoc = self.db["avComment"]
