@@ -19,11 +19,8 @@ class AvIndexWebScrapy(BaseSpider):
 
     def start_requests(self):
         dingUrlIndex = u'http://www.bilibili.com/index/ding/'
-        # requestList = []
         for i in xrange(0, 160):
             yield Request(dingUrlIndex + str(i) + u'.json', callback=self.parseJson)
-            # requestList.append(Request(dingUrlIndex + str(i) + u'.json', callback=self.parseJson))
-        # return requestList
 
     def parseJson(self, response):
         try:
