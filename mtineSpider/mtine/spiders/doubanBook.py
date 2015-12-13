@@ -27,8 +27,7 @@ class DoubanBookSpider(BaseSpider):
         lists = hxs.select('//a/@href').extract()
         for a in lists:
             if u'ebook' in a:
-                pass
-                # yield Request(a, callback=self.parseEbook)
+                yield Request(a, callback=self.parseEbook)
 
             elif u'subject' in a:
                 yield Request(a, callback=self.parseSubject)
@@ -47,6 +46,13 @@ class DoubanBookSpider(BaseSpider):
             b = i.xpath('.//span[2]').xpath('string(.)').extract()
             if a and b:
                 item[a[0].strip()] = b[0].strip()
+        lists = hxs.select('//a/@href').extract()
+        for a in lists:
+            if u'ebook' in a:
+                yield Request(a, callback=self.parseEbook)
+
+            elif u'subject' in a:
+                yield Request(a, callback=self.parseSubject)
 
     def parseSubject(self, response):
         hxs = Selector(response)
@@ -69,10 +75,17 @@ class DoubanBookSpider(BaseSpider):
                 k.append(i)
             else:
                 k[-1] += i
-
         for i in k:
             try:
                 a, b = i.split(':')
                 item[a.strip()] = b.strip()
             except:
                 pass
+
+        lists = hxs.select('//a/@href').extract()
+        for a in lists:
+            if u'ebook' in a:
+                yield Request(a, callback=self.parseEbook)
+
+            elif u'subject' in a:
+                yield Request(a, callback=self.parseSubject)
