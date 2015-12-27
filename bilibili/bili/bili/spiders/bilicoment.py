@@ -20,10 +20,12 @@ class BilibiCommScrapy(BaseSpider):
         self.avCommentDoc = self.db["avComment"]
 
     def start_requests(self):
-        tmp = self.doc.find({}, {u'aid': 1}).sort([(u'downloadTime',pymongo.DESCENDING),])
-        for i in tmp:
-            url = u'http://api.bilibili.com/feedback?type=jsonp&ver=3&callback=jQuery17202343479166738689_' + str(int(time.time()*1000)) + u'&mode=arc&aid=' + str(i[u'aid']) + u'&pagesize=200&page=1&_=' + str(int(time.time()*1000))
-            yield Request(url, callback=self.parse)
+        count = self.doc.count()
+        for k in xrange(0,count, 10000):
+            tmp = self.doc.find({}, {u'aid': 1}).skip(k).limit(10000)
+            for i in tmp:
+                url = u'http://api.bilibili.com/feedback?type=jsonp&ver=3&callback=jQuery17202343479166738689_' + str(int(time.time()*1000)) + u'&mode=arc&aid=' + str(i[u'aid']) + u'&pagesize=200&page=1&_=' + str(int(time.time()*1000))
+                yield Request(url, callback=self.parse)
 
     def parse(self, response):
         tmp = re.findall('\((.*)\)', response.body, re.S)
