@@ -6,13 +6,14 @@ import json
 import pymongo
 from scrapy import Request
 from datetime import datetime
+from bili.settings import MONGOHOST
 
 class GetFavBoxScrapy(BaseSpider):
     name = u'getFavBox'
     allowed_domains = [u'bilibili.com', ]
 
     def __init__(self):
-        self.connectionMongoDB = pymongo.MongoClient(host='192.168.0.8', port=27017)
+        self.connectionMongoDB = pymongo.MongoClient(host=MONGOHOST, port=27017)
         self.db = self.connectionMongoDB['bilibili']
         self.userInfo = self.db["userInfo"]
 
@@ -29,7 +30,7 @@ class GetFavBoxScrapy(BaseSpider):
             tmp = json.loads(response.body)
             if tmp[u'status']:
                 for i in tmp[u'data'][u'list']:
-                    self.userInfo.update({u'mid': str(response.meta[u'mid'])}, {'$addSet':{u'favBox': i}}, True)
+                    self.userInfo.update({u'mid': str(response.meta[u'mid'])}, {'$addToSet':{u'favBox': i}}, True)
         except:
             pass
 

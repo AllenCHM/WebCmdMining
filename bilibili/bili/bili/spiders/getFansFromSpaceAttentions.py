@@ -7,21 +7,23 @@ import pymongo
 from scrapy import Request
 from datetime import datetime
 import re
+from bili.settings import MONGOHOST
 
 class GetFansFromSpaceAttentionsScrapy(BaseSpider):
     name = u'getFansFromSpaceAttentions'
     allowed_domains = [u'bilibili.com', ]
 
     def __init__(self):
-        self.connectionMongoDB = pymongo.MongoClient(host='192.168.0.8', port=27017)
+        self.connectionMongoDB = pymongo.MongoClient(host=MONGOHOST, port=27017)
         self.db = self.connectionMongoDB['bilibili']
         self.userInfo = self.db["userInfo"]
 
     def start_requests(self):
         userInfoUrl = u'http://space.bilibili.com/ajax/friend/GetAttentionList?mid={}&page=1'
-        tmp = self.userInfo.find({}, {u'mid':1})  #mid 为用户id
-        for i in tmp:
-            yield Request(userInfoUrl.format(str(i[u'mid'])), meta={u'mid': i[u'mid']}, callback=self.parseUserAttentionJson)
+        count = self.userInfo.find({}, {u'_id':1}).count()
+        for k in xrange(0, count, 1000):
+            for i in self.userInfo.find({}, {u'mid':1}).skip(k).limit(1000):
+                yield Request(userInfoUrl.format(str(i[u'mid'])), meta={u'mid': i[u'mid']}, callback=self.parseUserAttentionJson)
 
     def parseUserAttentionJson(self, response):
         try:

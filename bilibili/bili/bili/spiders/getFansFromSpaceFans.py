@@ -7,13 +7,15 @@ import pymongo
 from scrapy import Request
 from datetime import datetime
 import re
+from bili.settings import MONGOHOST
+
 
 class GetFansFromSpaceFansScrapy(BaseSpider):
     name = u'getFansFromSpaceFans'
     allowed_domains = [u'bilibili.com', ]
 
     def __init__(self):
-        self.connectionMongoDB = pymongo.MongoClient(host='192.168.0.8', port=27017)
+        self.connectionMongoDB = pymongo.MongoClient(host=MONGOHOST, port=27017)
         self.db = self.connectionMongoDB['bilibili']
         self.userInfo = self.db["userInfo"]
 

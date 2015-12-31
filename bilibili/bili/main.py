@@ -4,4 +4,4 @@ __author__ = 'AllenCHM'
 
 from scrapy import cmdline
 
-cmdline.execute('scrapy crawl avChat'.split())
+cmdline.execute('scrapy crawl AvIndex'.split())
