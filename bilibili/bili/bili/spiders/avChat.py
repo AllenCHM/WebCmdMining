@@ -22,11 +22,10 @@ class AvChatScrapy(BaseSpider):
         self.avUrlDoc = self.db["avUrl"]
 
     def start_requests(self):
-        tmp = self.doc.find({}, {u'aid': 1}).sort([(u'downloadTime',pymongo.DESCENDING),])
-        for i in tmp:
-            yield Request(u'http://www.bilibili.com/video/av' + str(i[u'aid']) + u'/', callback=self.parse)
-# chartid 4443709
-# 与url对应
+        count = self.doc.count()
+        for k in xrange(0, count, 1000):
+            for i in self.doc.find({}, {u'aid':1}).skip(k).limit(1000):
+                yield Request(u'http://www.bilibili.com/video/av' + str(i[u'aid']) + u'/', callback=self.parse)
 
     def parse(self, response):
         self.avUrlDoc.update({u'url': response.url}, {u'url': response.url, u'downloadTime': time.time()}, True)
@@ -48,7 +47,6 @@ class AvChatScrapy(BaseSpider):
         hxs = HtmlXPathSelector(response)
         chatid = hxs.xpath('//chatid/text()').extract()[0]
         ds = hxs.xpath('//d')
-        startTime = time.time()
         chatList = self.avChartDoc.find_one({u'cid': chatid}, {u'chatList': 1})
         try:
             chatList = dict(chatList)
@@ -66,7 +64,6 @@ class AvChatScrapy(BaseSpider):
             except Exception, e:
                 pass
         self.avChartDoc.update({u'_id': chatList[u'_id']}, {'$set': {u'chatList': tmp, u'downloadTime': time.time()}}, True)
-        print str(time.time()-startTime)
 
 
     def spider_close(self):
