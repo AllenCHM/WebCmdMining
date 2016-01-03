@@ -19,6 +19,8 @@ class GetSubmitVideosByMidScrapy(BaseSpider):
         self.db = self.connectionMongoDB['bilibili']
         self.doc = self.db["avIndex"]
         self.userInfo = self.db["userInfo"]
+        self.timestamp = str(int(time.time()*1000))
+        self.userInfoUrl = u'http://space.bilibili.com/ajax/member/GetInfo?mid='
 
     def start_requests(self):
         count = self.userInfo.count()
@@ -27,22 +29,52 @@ class GetSubmitVideosByMidScrapy(BaseSpider):
             tmp = self.userInfo.find({}, {u'mid': 1}).skip(k).limit(10000)
             for i in tmp:
                 yield Request(u'http://space.bilibili.com/ajax/member/getSubmitVideos?mid=%s&pagesize=30&tid=0&keyword=&page=1' %(i[u'mid']), callback=self.parse)
-# chartid 4443709
-# 与url对应
 
     def parse(self, response):
-        data = json.loads(response.body)
-        if data[u'status']:
-            if data[u'data'].has_key(u'vlist'):
-                for i in data[u'data'][u'vlist']:
-                    self.doc.update({u'aid':str(i[u'aid'])}, i, True)
-            if data[u'data'][u'pages'] > 1:
-                for p in xrange(2, data[u'data'][u'pages']):
+        try:
+            data = json.loads(response.body)
+            if data[u'status']:
+                data = data[u'data']
+        except:
+            tmp = re.findall('\((.*)\)', response.body, re.S)
+            data = json.loads(tmp[0])
+            pass
+        if data.has_key(u'vlist'):
+            for i in data[u'vlist']:
+                self.doc.update({u'aid':str(i[u'aid'])}, i, True)
+                url = u'http://api.bilibili.com/feedback?type=jsonp&ver=3&callback=jQuery17202343479166738689_' + self.timestamp + u'&mode=arc&aid=' + str(i[u'aid']) + u'&pagesize=20&page=1&_=' + self.timestamp
+                yield Request(url, callback=self.parseComm)
+
+        if data.has_key(u'pages'):
+            if data[u'pages'] > 1:
+                for p in xrange(2, data[u'pages']):
                     url = response.url.replace(re.findall('(page=\d.*?)', response.url)[0], u'page='+str(p))
                     yield Request(url, callback=self.parse)
                     pass
-        else:
-            print u'network error'
+
+    def parseComm(self, response):
+        tmp = re.findall('\((.*)\)', response.body, re.S)
+        page = re.findall('page=(.*?)&', response.url)[0]
+        aid = re.findall('aid=(.*?)&', response.url)[0]
+        tmp = json.loads(tmp[0])
+        if tmp[u'list']:
+            for i in tmp[u'list']:
+                self.doc.update({u'aid':int(aid)}, {u"$addToSet":{u"feedback":i}}, True)
+                yield Request(self.userInfoUrl + str(i[u'mid']), callback=self.parseUserInfoJson)
+            if int(page)*20 < tmp[u'results']:
+                for i in xrange(int(page)+1, (tmp[u'pages']+20-1)/20):
+                    url = response.url.split(u'&')
+                    url[-2] = u'page=' + str(i)
+                    url = u'&'.join(url)
+                    yield Request(url, callback=self.parse)
+
+    def parseUserInfoJson(self, response):
+        try:
+            tmp = json.loads(response.body)
+            if tmp[u'status']:
+                    self.userInfo.update({u'mid': tmp[u'data'][u'mid']}, tmp[u'data'], True)
+        except:
+            pass
 
 
     def spider_close(self):
