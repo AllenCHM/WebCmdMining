@@ -18,7 +18,8 @@ class BilibiCommScrapy(BaseSpider):
         self.connectionMongoDB = pymongo.MongoClient(host=MONGOHOST, port=27017)
         self.db = self.connectionMongoDB['bilibili']
         self.doc = self.db["avIndex"]
-        self.avCommentDoc = self.db["avComment"]
+        self.userInfo = self.db["userInfo"]
+        self.userInfoUrl = u'http://space.bilibili.com/ajax/member/GetInfo?mid='
 
     def start_requests(self):
         count = self.doc.count()
@@ -36,14 +37,21 @@ class BilibiCommScrapy(BaseSpider):
         if tmp[u'list']:
             for i in tmp[u'list']:
                 self.doc.update({u'aid':int(aid)}, {u"$addToSet":{u"feedback":i}}, True)
-            #总评论数算法
-
+                yield Request(self.userInfoUrl + str(i[u'mid']), callback=self.parseUserInfoJson)
             if int(page)*20 < tmp[u'results']:
                 for i in xrange(int(page)+1, (tmp[u'pages']+20-1)/20):
                     url = response.url.split(u'&')
                     url[-2] = u'page=' + str(i)
                     url = u'&'.join(url)
                     yield Request(url, callback=self.parse)
+
+    def parseUserInfoJson(self, response):
+        try:
+            tmp = json.loads(response.body)
+            if tmp[u'status']:
+                    self.userInfo.update({u'mid': tmp[u'data'][u'mid']}, tmp[u'data'], True)
+        except:
+            pass
 
     def closed(self, reason):
         self.connectionMongoDB.close()
