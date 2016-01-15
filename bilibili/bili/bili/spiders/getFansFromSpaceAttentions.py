@@ -37,10 +37,14 @@ class GetFansFromSpaceAttentionsScrapy(BaseSpider):
                             }
                     self.userInfo.update({u'mid': str(response.meta[u'mid'])}, {u'$addToSet':{u'attentionList':data}})
                     t = self.userInfo.find({u'mid':str(i[u'fid'])})
-                    if not t.count():
-                        userInfoUrl = u'http://space.bilibili.com/ajax/member/GetInfo?mid='
-                        yield Request(userInfoUrl + str(i[u'fid']), callback=self.parseUserInfoJson)
-                for k in xrange(tmp[u'data'][u'pages']):
+                    # if not t.count():
+                    #     userInfoUrl = u'http://space.bilibili.com/ajax/member/GetInfo?mid='
+                    #     yield Request(userInfoUrl + str(i[u'fid']), callback=self.parseUserInfoJson)
+                if tmp[u'data'][u'pages'] > 5:
+                    num = 5
+                else:
+                    num = tmp[u'data'][u'pages']
+                for k in xrange(2, num+1):
                 # 系统限制只能看前5页
                 # for k in xrange(tmp[u'data'][u'pages']):
                     url = response.url.replace(re.findall(u'page=.*', response.url)[0], u'page='+str(k))
