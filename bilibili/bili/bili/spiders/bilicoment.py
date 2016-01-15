@@ -34,16 +34,17 @@ class BilibiCommScrapy(BaseSpider):
         page = re.findall('page=(.*?)&', response.url)[0]
         aid = re.findall('aid=(.*?)&', response.url)[0]
         tmp = json.loads(tmp[0])
-        if tmp[u'list']:
-            for i in tmp[u'list']:
-                self.doc.update({u'aid':int(aid)}, {u"$addToSet":{u"feedback":i}}, True)
-                yield Request(self.userInfoUrl + str(i[u'mid']), callback=self.parseUserInfoJson)
-            if int(page)*20 < tmp[u'results']:
-                for i in xrange(int(page)+1, (tmp[u'pages']+20-1)/20):
-                    url = response.url.split(u'&')
-                    url[-2] = u'page=' + str(i)
-                    url = u'&'.join(url)
-                    yield Request(url, callback=self.parse)
+        if tmp.has_key(u'list'):
+            if tmp[u'list']:
+                for i in tmp[u'list']:
+                    self.doc.update({u'aid':int(aid)}, {u"$addToSet":{u"feedback":i}}, True)
+                    yield Request(self.userInfoUrl + str(i[u'mid']), callback=self.parseUserInfoJson)
+                if int(page)*20 < tmp[u'results']:
+                    for i in xrange(int(page)+1, (tmp[u'pages']+20-1)/20):
+                        url = response.url.split(u'&')
+                        url[-2] = u'page=' + str(i)
+                        url = u'&'.join(url)
+                        yield Request(url, callback=self.parse)
 
     def parseUserInfoJson(self, response):
         try:
