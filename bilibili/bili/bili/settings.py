@@ -13,7 +13,12 @@ BOT_NAME = 'bili'
 
 SPIDER_MODULES = ['bili.spiders']
 NEWSPIDER_MODULE = 'bili.spiders'
+# LOG_LEVEL = 'DEBUG'
 LOG_LEVEL = 'INFO'
+
+DEPTH_PRIORITY = 1
+SCHEDULER_DISK_QUEUE = 'scrapy.squeues.PickleFifoDiskQueue'
+SCHEDULER_MEMORY_QUEUE = 'scrapy.squeues.FifoMemoryQueue'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'bili (+http://www.yourdomain.com)'
@@ -49,9 +54,11 @@ LOG_LEVEL = 'INFO'
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'bili.middlewares.MyCustomDownloaderMiddleware': 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+     'bili.proxyServer.ProxyMiddleware': 543,
+ 'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware':None,
+    'bili.routeUserAgent.RotateUserAgentMiddleware':400
+}
 
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
@@ -83,4 +90,8 @@ LOG_LEVEL = 'INFO'
 #HTTPCACHE_DIR='httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES=[]
 #HTTPCACHE_STORAGE='scrapy.extensions.httpcache.FilesystemCacheStorage'
-MONGOHOST = u'localhost'
+MONGOHOST = u'192.168.0.181'
+# MONGOHOST="192.168.2.165"
+MONGOPORT=27017
+REDISHOST='192.168.3.133'
+REDISPORT=6379
