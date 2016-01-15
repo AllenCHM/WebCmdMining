@@ -24,7 +24,6 @@ class GetSubmitVideosByMidScrapy(BaseSpider):
 
     def start_requests(self):
         count = self.userInfo.count()
-
         for k in xrange(0, count, 10000):
             tmp = self.userInfo.find({}, {u'mid': 1}).skip(k).limit(10000)
             for i in tmp:
@@ -38,7 +37,6 @@ class GetSubmitVideosByMidScrapy(BaseSpider):
         except:
             tmp = re.findall('\((.*)\)', response.body, re.S)
             data = json.loads(tmp[0])
-            pass
         if data.has_key(u'vlist'):
             for i in data[u'vlist']:
                 self.doc.update({u'aid':str(i[u'aid'])}, i, True)
@@ -50,7 +48,6 @@ class GetSubmitVideosByMidScrapy(BaseSpider):
                 for p in xrange(2, data[u'pages']):
                     url = response.url.replace(re.findall('(page=\d.*?)', response.url)[0], u'page='+str(p))
                     yield Request(url, callback=self.parse)
-                    pass
 
     def parseComm(self, response):
         tmp = re.findall('\((.*)\)', response.body, re.S)
@@ -74,7 +71,7 @@ class GetSubmitVideosByMidScrapy(BaseSpider):
             if tmp[u'status']:
                     self.userInfo.update({u'mid': tmp[u'data'][u'mid']}, tmp[u'data'], True)
         except:
-            pass
+            del response
 
 
     def spider_close(self):
