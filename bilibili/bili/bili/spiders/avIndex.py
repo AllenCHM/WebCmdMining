@@ -29,9 +29,7 @@ class AvIndexWebScrapy(BaseSpider):
             tmp = json.loads(response.body)
             if tmp[u'list']:
                 for k in tmp[u'list']:
-                    # k.update({u'downloadTime': time.time()})
-                    k.update({u'downloadTime': str(datetime.now())})
-                    self.doc.update({u'aid': k[u'aid']}, k, True)
+                    self.doc.update_one({u'aid':k[u'aid']}, {'$set': k}, True)
         except:
             pass
 

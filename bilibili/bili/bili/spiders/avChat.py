@@ -51,7 +51,7 @@ class AvChatScrapy(BaseSpider):
         try:
             chatList = dict(chatList)
         except:
-            pass
+            return
         if not chatList.has_key(u'chatList'):
             chatList.update({u'chatList': []})
         tmp = chatList[u'chatList']
@@ -63,7 +63,7 @@ class AvChatScrapy(BaseSpider):
                     tmp.append({u'p': p, u'v': v})
             except Exception, e:
                 pass
-        self.avChartDoc.update({u'_id': chatList[u'_id']}, {'$set': {u'chatList': tmp, u'downloadTime': time.time()}}, True)
+        self.avChartDoc.update_one({u'_id': chatList[u'_id']}, {'$set': {u'chatList': tmp}}, True)
 
 
     def spider_close(self):
