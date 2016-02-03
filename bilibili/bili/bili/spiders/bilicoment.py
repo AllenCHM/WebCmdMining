@@ -19,6 +19,7 @@ class BilibiCommScrapy(BaseSpider):
         self.db = self.connectionMongoDB['bilibili']
         self.doc = self.db["avIndex"]
         self.userInfo = self.db["userInfo"]
+        self.comment = self.db["comment"]
         self.userInfoUrl = u'http://space.bilibili.com/ajax/member/GetInfo?mid='
 
     def start_requests(self):
@@ -32,13 +33,14 @@ class BilibiCommScrapy(BaseSpider):
     def parse(self, response):
         tmp = re.findall('\((.*)\)', response.body, re.S)
         page = re.findall('page=(.*?)&', response.url)[0]
-        aid = re.findall('aid=(.*?)&', response.url)[0]
         tmp = json.loads(tmp[0])
         if tmp.has_key(u'list'):
             if tmp[u'list']:
                 for i in tmp[u'list']:
-                    self.doc.update({u'aid':int(aid)}, {u"$addToSet":{u"feedback":i}}, True)
-                    yield Request(self.userInfoUrl + str(i[u'mid']), callback=self.parseUserInfoJson)
+                    self.comment.update_one({u'aid': int(re.findall('aid=(.*?)&', response.url)[0])},
+                                            {u"$addToSet": {u"feedback": i}}, True)
+                    if not self.userInfo.find_one({u'mid':str(i[u'mid'])}, {u'_id':1}):
+                        yield Request(self.userInfoUrl + str(i[u'mid']), callback=self.parseUserInfoJson)
                 if int(page)*20 < tmp[u'results']:
                     for i in xrange(int(page)+1, (tmp[u'pages']+20-1)/20):
                         url = response.url.split(u'&')
@@ -50,7 +52,7 @@ class BilibiCommScrapy(BaseSpider):
         try:
             tmp = json.loads(response.body)
             if tmp[u'status']:
-                    self.userInfo.update({u'mid': tmp[u'data'][u'mid']}, tmp[u'data'], True)
+                    self.userInfo.update_one({u'mid': tmp[u'data'][u'mid']}, {u'$set':tmp[u'data']}, True)
         except:
             pass
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 __author__ = 'AllenCHM'
+#获取首页视频
 
 from scrapy.spider import BaseSpider
 from scrapy.selector import HtmlXPathSelector

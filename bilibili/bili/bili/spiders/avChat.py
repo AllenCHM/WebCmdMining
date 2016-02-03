@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 __author__ = 'AllenCHM'
+#弹幕信息
 
 from scrapy.spider import BaseSpider
 from scrapy.selector import HtmlXPathSelector
@@ -20,19 +21,28 @@ class AvChatScrapy(BaseSpider):
         self.doc = self.db["avIndex"]
         self.avChartDoc = self.db["avChart"]
         self.avUrlDoc = self.db["avUrl"]
+        self.timeSTART = time.time()
 
     def start_requests(self):
+        count = self.avChartDoc.count()
+        for k in xrange(0, count, 1000):
+            for i in self.avChartDoc.find({}, {u'cid':1}).skip(k).limit(1000):
+                url = u'http://comment.bilibili.com/' + str(i[u'cid'])+ u'.xml'
+                yield Request(url, callback=self.parseXml)
+
         count = self.doc.count()
         for k in xrange(0, count, 1000):
             for i in self.doc.find({}, {u'aid':1}).skip(k).limit(1000):
-                yield Request(u'http://www.bilibili.com/video/av' + str(i[u'aid']) + u'/', callback=self.parse)
+                url = u'http://www.bilibili.com/video/av' + str(i[u'aid']) + u'/'
+                if not self.avChartDoc.find_one({}, {u'_id':1}):
+                    yield Request(url, callback=self.parse)
 
     def parse(self, response):
         self.avUrlDoc.update({u'url': response.url}, {u'url': response.url, u'downloadTime': time.time()}, True)
         hxs = HtmlXPathSelector(response)
         cid = re.findall('cid=(.*?)&', response.body)
         if cid:
-            self.avChartDoc.update({'url': response.url}, {'url': response.url, 'cid': cid[0]}, True)
+            self.avChartDoc.update_one({'url': response.url}, {u'$set':{'url': response.url, 'cid': cid[0]}}, True)
             yield Request(u'http://comment.bilibili.com/' + cid[0] + u'.xml', callback=self.parseXml)
         try:
             options = hxs.xpath('//option/@value')
@@ -68,3 +78,4 @@ class AvChatScrapy(BaseSpider):
 
     def spider_close(self):
         self.connectionMongoDB.close()
+        print u'all time use: ', str(time.time() - self.timeSTART)
