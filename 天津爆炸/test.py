@@ -96,12 +96,27 @@ def genUrl(url):
     else:
         t[3] = str(int(t[3])-1)
     t = '-'.join(t)
-    template = u'http://s.weibo.com/weibo/%25E5%25A4%25A9%25E6%25B4%25A5%25E7%2588%2586%25E7%2582%25B8&typeall=1&suball=1&timescope=custom:{d}:{c}&Refer=g'.format(d=t, c=a)
+    if u'category=4' in url:
+        template = u'http://s.weibo.com/weibo/%25E5%25A4%25A9%25E6%25B4%25A5%25E7%2588%2586%25E7%2582%25B8&vip=1=1&suball=1&timescope=custom:{d}:{c}&Refer=g'.format(d=a, c=b)
+    elif u'category=5' in url:
+        template = u'http://s.weibo.com/weibo/%25E5%25A4%25A9%25E6%25B4%25A5%25E7%2588%2586%25E7%2582%25B8&category=4&suball=1&timescope=custom:{d}:{c}&Refer=g'.format(d=a, c=b)
+    elif u'vip=1' in url:
+        template = u'http://s.weibo.com/weibo/%25E5%25A4%25A9%25E6%25B4%25A5%25E7%2588%2586%25E7%2582%25B8&atten=1&suball=1&timescope=custom:{d}:{c}&Refer=g'.format(d=a, c=b)
+    elif u'atten=1' in url:
+        template = u'http://s.weibo.com/weibo/%25E5%25A4%25A9%25E6%25B4%25A5%25E7%2588%2586%25E7%2582%25B8&scope=ori&suball=1&timescope=custom:{d}:{c}&Refer=g'.format(d=a, c=b)
+    elif u'scope=ori' in url:
+        template = u'http://s.weibo.com/weibo/%25E5%25A4%25A9%25E6%25B4%25A5%25E7%2588%2586%25E7%2582%25B8&xsort=hot&suball=1&timescope=custom:{d}:{c}&Refer=g'.format(d=a, c=b)
+    elif u'xsort=hot' in url:
+        template = u'http://s.weibo.com/weibo/%25E5%25A4%25A9%25E6%25B4%25A5%25E7%2588%2586%25E7%2582%25B8&category=5&suball=1&timescope=custom:{d}:{c}&Refer=g'.format(d=t, c=a)
+    else:
+        template = url
+    if u'2015-08-11' in template:
+        return ''
     return template
 
 
 browser = loginWeibo()
-browser = getPage(browser, u'http://s.weibo.com/weibo/%25E5%25A4%25A9%25E6%25B4%25A5%25E7%2588%2586%25E7%2582%25B8&typeall=1&suball=1&timescope=custom:2015-08-27-23:2015-08-28-0&Refer=g')
+browser = getPage(browser, u'http://s.weibo.com/weibo/%25E5%25A4%25A9%25E6%25B4%25A5%25E7%2588%2586%25E7%2582%25B8&category=5&suball=1&timescope=custom:2015-08-27-23:2015-08-28-0&Refer=g')
 time.sleep(random.uniform(20,30))
 count = 0
 while True:
@@ -119,13 +134,16 @@ while True:
         browser.find_element_by_xpath('//a[contains(@class, "page next")]').click()
         time.sleep(random.uniform(15,40))
     except Exception, e:
-        time.sleep(random.uniform(45,60))
+        time.sleep(random.uniform(5,30))
         nextPage = re.findall('下一页', tmpHtml, re.S)
         if nextPage:
             browser = getPage(browser, current_url)
         else:
             url = genUrl(current_url)
-            browser = getPage(browser, url)
+            if url:
+                browser = getPage(browser, url)
+            else:
+                break
         time.sleep(random.uniform(20,26))
 
 browser.quit()
