@@ -19,7 +19,7 @@ db = client[u'wss']
 doc = db[u'es']
 
 
-def parsePageInfo(doc, html, current_url):
+def parsePageInfoSearch(doc, html, current_url):
     print current_url
     try:
         soup = etree.HTML(html)
@@ -53,6 +53,58 @@ def parsePageInfo(doc, html, current_url):
         return True
     except Exception, e:
         return False
+
+
+def parsePageInfo(doc, html, current_url):
+    print current_url
+    t = True
+    try:
+        soup = etree.HTML(html)
+        divs = soup.xpath('//div[@node-type="feed_list"]//div[contains(@class, "WB_cardwrap")]')
+
+        for num, div in enumerate(divs):
+            item = {}
+            #微博ID, 微博正文， 链接地址， 发布时间， 微博来源， 转发量， 评论数， 评论内容， 点赞数，微博类型
+            try:
+                item[u'微博ID'] = div.xpath('//div[@class="pf_username"]/h1/text()')[0].strip()
+                # item[u'微博ID'] = div.xpath('//div[@class="pf_username"]/h1[@class="username"]/text()')[0].strip()
+            except:
+                continue
+
+            item[u'微博正文'] = div.xpath('.//div[@node-type="feed_content"]')[0].xpath('string(.)').strip()
+            item[u'链接地址'] = u'http://weibo.com' + div.xpath('.//a[@node-type="feed_list_item_date"]/@href')[0].split(u'?')[0]
+            item[u'发布时间'] = div.xpath('.//a[@node-type="feed_list_item_date"]/@title')[0].strip()
+            # item[u'IDurl'] = div.xpath('.//div[@class="feed_content wbcon"]/a[1]/@href')[0]
+            # item[u'微博正文'] = div.xpath('.//div[@class="feed_content wbcon"]/p[@class="comment_txt"]')[0].xpath('string(.)')
+            # item[u'链接地址'] = div.xpath('.//div[@class="feed_from W_textb"]/a[1]/@href')[-1]
+            # item[u'发布时间'] = div.xpath('.//div[@class="feed_from W_textb"]/a[1]/@title')[0].strip()
+            if u'2015-08-11' in item[u'发布时间']:
+                t = False
+            try:
+                item[u'微博来源'] = div.xpath('.//a[@action-type="app_source"]/text()')[0]
+                # item[u'微博来源'] = div.xpath('.//div[@node-type="like"]/div[@class="feed_from W_textb"]/a[@rel="nofollow"]/text()')[0]
+            except:
+                item[u'微博来源'] = u''
+            try:
+                item[u'转发量'] = div.xpath('.//span[@node-type="forward_btn_text"]')[0].xpath('string(.)')[2:]
+                item[u'评论数'] = div.xpath('.//span[@node-type="comment_btn_text"]')[0].xpath('string(.)')[2:]
+                item[u'点赞数'] = div.xpath('.//span[@node-type="like_status"]')[0].xpath('string(.)')
+            except:
+                pass
+
+            # item[u'转发量'] = div.xpath('.//div[@class="feed_action clearfix"]/ul/li[2]')[0].xpath('string(.)')[2:]
+            # item[u'评论数'] = div.xpath('.//div[@class="feed_action clearfix"]/ul/li[3]')[0].xpath('string(.)')[2:]
+            # item[u'评论内容']
+            # item[u'点赞数'] = div.xpath('.//div[@class="feed_action clearfix"]/ul/li[4]')[0].xpath('string(.)')
+            # item[u'微博类型'] = div.xpath('.//div[@class="feed_content wbcon"]/div[@class="comment"]')
+            # if item[u'微博类型']:
+            #     item[u'微博类型'] = u'转发'
+            # else:
+            #     item[u'微博类型'] = u'原创'
+            doc.update({u'链接地址':item[u'链接地址']},item, True)
+        return t
+    except Exception, e:
+        return t
 
 
 
@@ -116,35 +168,66 @@ def genUrl(url):
 
 
 browser = loginWeibo()
-browser = getPage(browser, u'http://s.weibo.com/weibo/%25E5%25A4%25A9%25E6%25B4%25A5%25E7%2588%2586%25E7%2582%25B8&category=5&suball=1&timescope=custom:2015-08-27-23:2015-08-28-0&Refer=g')
-time.sleep(random.uniform(20,30))
-count = 0
-while True:
 
-    current_url = browser.current_url
-    try:
-        tmpHtml = browser.page_source
-        parsePageInfo(doc,tmpHtml, current_url)
-        # js="var q=document.documentElement.scrollTop=10000"
-        # browser.execute_script(js)
-        # time.sleep(random.uniform(1,5))
-        # tmpHtml = browser.page_source
-        # parsePageInfo(doc,tmpHtml)
+urls = [
+    u'http://weibo.com/breakingnews?is_all=1&stat_date=201508&page=5#feedtop',
+    u'http://weibo.com/rmrb?is_all=1&stat_date=201508&page=8#feedtop',
+    u'http://weibo.com/cctvxinwen?is_all=1&stat_date=201508&page=7#feedtop',
+    u'http://weibo.com/crinews?is_all=1&stat_date=201508&page=7#feedtop',
+    u'http://weibo.com/entpaparazzi?is_all=1&stat_date=201508&page=5#feedtop',
+    u'http://weibo.com/mrjjxw?is_all=1&stat_date=201508&page=8#feedtop',
+    u'http://weibo.com/u/1699432410?is_all=1&stat_date=201512&page=5#feedtop',
+    u'http://weibo.com/u/1682207150?is_all=1&stat_date=201508&page=5#feedtop',
+    u'http://weibo.com/u/1644489953?is_all=1&stat_date=201508&page=5#feedtop',
+    u'http://weibo.com/u/1893801487?is_all=1&stat_date=201508&page=5#feedtop',
+]
 
-        browser.find_element_by_xpath('//a[contains(@class, "page next")]').click()
-        time.sleep(random.uniform(15,40))
-    except Exception, e:
-        time.sleep(random.uniform(5,30))
-        nextPage = re.findall('下一页', tmpHtml, re.S)
-        if nextPage:
-            browser = getPage(browser, current_url)
-        else:
-            url = genUrl(current_url)
-            if url:
-                browser = getPage(browser, url)
-            else:
+for url in urls:
+    browser = getPage(browser, url)
+    time.sleep(random.uniform(20,30))
+    count = 0
+    while True:
+
+        current_url = browser.current_url
+        try:
+            tmpHtml = browser.page_source
+            if not parsePageInfo(doc,tmpHtml, current_url):
                 break
-        time.sleep(random.uniform(20,26))
+
+
+            js="var q=document.documentElement.scrollTop=10000"
+            browser.execute_script(js)
+            time.sleep(random.uniform(7,20))
+            tmpHtml = browser.page_source
+            if not parsePageInfo(doc,tmpHtml, current_url):
+                break
+
+
+            js="var q=document.documentElement.scrollTop=10000"
+            browser.execute_script(js)
+            time.sleep(random.uniform(7,20))
+            tmpHtml = browser.page_source
+            if not parsePageInfo(doc,tmpHtml, current_url):
+                break
+
+
+            js="var q=document.documentElement.scrollTop=10000"
+            browser.execute_script(js)
+            time.sleep(random.uniform(7,20))
+            tmpHtml = browser.page_source
+            if not parsePageInfo(doc,tmpHtml, current_url):
+                break
+
+            browser.find_element_by_xpath('//a[contains(@class, "page next")]').click()
+            time.sleep(random.uniform(15,40))
+        except Exception, e:
+            time.sleep(random.uniform(5,30))
+            # nextPage = re.findall('下一页', tmpHtml, re.S)
+            # if nextPage or u'没发过微博' in tmpHtml:
+            browser = getPage(browser, current_url)
+            # else:
+            #     break
+            time.sleep(random.uniform(20,26))
 
 browser.quit()
 

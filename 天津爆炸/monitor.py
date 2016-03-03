@@ -15,4 +15,4 @@ while True:
     new = doc.count()
     print datetime.datetime.now(), new, new-old
     old = new
-    time.sleep(20)
+    time.sleep(5)
