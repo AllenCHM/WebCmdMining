@@ -20,14 +20,14 @@ import codecs
 
 
 def task2():
-    f= codecs.open('wb.csv', 'wb', u'utf-8')
-    fieldName = [u'转发量', u'微博正文', u'微博ID', u'发布时间']
+    f= codecs.open('wbTask2.csv', 'wb', u'utf-8')
+    fieldName = [u'转发量', u'微博ID', u'发布时间', u'微博正文']
     dict_writer = csv.DictWriter(f, fieldnames=fieldName)
     dict_writer.writerow(dict(zip(fieldName, fieldName)))
     c = []
     for i in doc.find({}, {u'转发量':1, u'微博正文':1, u'微博ID':1, u'发布时间':1, u'_id':0}):
         if i[u'转发量']:
-            if int(i[u'转发量']) > 1000:
+            if int(i[u'转发量']) >1000 and u'2016' not in i[u'发布时间'] and u'天津' in i[u'微博正文'] and u'爆炸' in i[u'微博正文']:
                 c.append(i)
     for i in c:
         dict_writer.writerow(i)
@@ -35,14 +35,15 @@ def task2():
 
 
 def task1():
-    f= codecs.open('wb1.csv', 'wb', u'utf-8')
-    fieldName = [u'转发量', u'微博正文', u'微博ID', u'发布时间']
+    f= codecs.open('wbTask1.csv', 'wb', u'utf-8')
+    fieldName = [u'转发量', u'微博ID', u'发布时间', u'微博正文']
     dict_writer = csv.DictWriter(f, fieldnames=fieldName)
     dict_writer.writerow(dict(zip(fieldName, fieldName)))
     c = []
     for i in doc.find({}, {u'转发量':1, u'微博正文':1, u'微博ID':1, u'发布时间':1, u'_id':0}):
         if i[u'转发量']:
-            c.append(i)
+            if int(i[u'转发量']) >500 and u'2016' not in i[u'发布时间'] and u'天津' in i[u'微博正文'] and u'爆炸' in i[u'微博正文']:
+                c.append(i)
 
     c.sort(lambda x,y: cmp(int(x[u'转发量']), int(y[u'转发量'])))
     print len(c)
@@ -51,4 +52,5 @@ def task1():
     f.close()
 
 task1()
+task2()
 conn.close()
