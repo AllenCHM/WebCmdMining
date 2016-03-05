@@ -8,20 +8,24 @@ db = conn['wss']
 doc = db['friends']
 
 count = 0
-
+d = {}
 for i in doc.find():
     attentions = []
     follows = []
-    for k in i[u'attentions']:
-        attentions.append(k[u'uid'])
+    try:
+        for k in i[u'attentions']:
+            attentions.append(k[u'uid'])
+            d.setdefault(k[u'uid'], k)
 
-    for k in i[u'follows']:
-        follows.append(k[u'uid'])
+        for k in i[u'follows']:
+            follows.append(k[u'uid'])
 
-    for k in attentions:
-        if k in follows:
-            print i[u'uid'], k
-            count += 1
+        for k in attentions:
+            if k in follows:
+                print i[u'uid'], u',',k, u',', d[k][u'addr']
+                count += 1
+    except:
+        continue
 
-    if count > 100:
-        print u'++++++++++++++++++++++++'
+
+print count
