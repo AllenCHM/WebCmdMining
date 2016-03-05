@@ -10,13 +10,15 @@ import random
 import pymongo
 from lxml import etree
 import hashlib
-
+import urlparse
 import pymongo
+
+import redis
 
 client = pymongo.MongoClient('mongodb://192.168.2.165,192.168.3.132,192.168.4.129/?replicaSet=mongo')
 db = client[u'wss']
-doc = db[u'es']
-
+doc = db[u'friends']
+redisKeysSet = redis.Redis(u'192.168.3.133', port=6379, db=10)
 
 def parsePageInfo(doc, html, current_url):
     print current_url
@@ -53,6 +55,59 @@ def parsePageInfo(doc, html, current_url):
     except Exception, e:
         return False
 
+def getAttention(doc, html):
+    user = re.findall('\$CONFIG\[\'onick\'\]=\'(.*?)\';', html)[0]
+    uid = re.findall('\$CONFIG\[\'oid\'\]=\'(.*?)\';', html)[0]
+    item = {}
+    item[u'user'] = user
+    item[u'uid'] = uid
+    item[u'attentions'] = []
+    if not doc.find_one({u'uid':item[u'uid']}):
+        doc.insert(item)
+
+    hxs = etree.HTML(html)
+    lis = hxs.xpath('//ul[@class="follow_list"]/li')
+    for li in lis:
+        t = {}
+        name = li.xpath('.//dt[@class="mod_pic"]/a/@title')[0]
+        userHref = urlparse.urlsplit(li.xpath('.//dd[contains(@class,"mod_info")]/div[contains(@class,"info_name")]/a[@class="S_txt1"]/@href')[0]).path
+        try:
+            addr = li.xpath('.//div[@class="info_add"]/span/text()')[0]
+            id = li.xpath('.//dd[contains(@class,"mod_info")]/div[contains(@class,"info_name")]/a[@class="S_txt1"]/@usercard')[0].split('&')[0][3:]
+        except:
+            continue
+        t[u'user'] = name
+        t[u'uid'] = id
+        t[u'userHref'] = userHref
+        t[u'addr'] = addr
+        doc.update({u'uid':item[u'uid']}, {'$addToSet':{u'attentions':t}})
+
+def getFollow(doc, html):
+    user = re.findall('\$CONFIG\[\'onick\'\]=\'(.*?)\';', html)[0]
+    uid = re.findall('\$CONFIG\[\'oid\'\]=\'(.*?)\';', html)[0]
+    item = {}
+    item[u'user'] = user
+    item[u'uid'] = uid
+    item[u'follows'] = []
+    if not doc.find_one({u'uid':item[u'uid']}):
+        doc.insert(item)
+    hxs = etree.HTML(html)
+    lis = hxs.xpath('//ul[@node-type="userListBox"]/li')
+    for li in lis:
+        t = {}
+        name = li.xpath('.//dt[@class="mod_pic"]/a/@title')[0]
+        userHref = urlparse.urlsplit(li.xpath('.//dd[contains(@class,"mod_info")]/div[contains(@class,"info_name")]/a[@class="S_txt1"]/@href')[0]).path
+        try:
+            addr = li.xpath('.//div[@class="info_add"]/span/text()')[0]
+            id = li.xpath('.//dd[contains(@class,"mod_info")]/div[contains(@class,"info_name")]/a[@class="S_txt1"]/@usercard')[0].split('&')[0][3:]
+        except:
+            continue
+        t[u'user'] = name
+        t[u'uid'] = id
+        t[u'userHref'] = userHref
+        t[u'addr'] = addr
+        doc.update({u'uid':item[u'uid']}, {'$addToSet':{u'follows':t}})
+
 
 
 def loginWeibo():
@@ -63,11 +118,10 @@ def loginWeibo():
     time.sleep(10)
     browser.find_element_by_xpath(u'//div[@class="tab_bar"]//a[@node-type="login_tab"]').click()
     time.sleep(5)
-    browser.find_element_by_xpath(u'//div[@node-type="username_box"]//input[@class="W_input"]').send_keys('17744022360')
+    browser.find_element_by_xpath(u'//div[@node-type="username_box"]//input[@class="W_input"]').send_keys('18750426694')
     browser.find_element_by_xpath(u'//div[@node-type="password_box"]//input[@class="W_input"]').send_keys('a123456')
     raw_input('ok')
     # browser.find_element_by_xpath(u'//div[@class="item_btn"]//a[@action-type="btn_submit"]').click()
-    time.sleep(10)
     return browser
 
 def getPage(browser, url):
@@ -115,43 +169,41 @@ def genUrl(url):
 
 
 browser = loginWeibo()
-browser = getPage(browser, u'http://weibo.com/p/1005051918611551')
-time.sleep(random.uniform(7,10))
-tmpHtml = browser.page_source
-savePage(2,tmpHtml)
-browser.find_element_by_xpath('//td/a[@bpfilter="page_frame"][1]').click()
-time.sleep(random.uniform(7,10))
-tmpHtml = browser.page_source
-savePage(2,tmpHtml)
-raw_input('kkkk')
 
+urls = [
+    u'http://weibo.com/1797799703/'
+]
 
-
-time.sleep(random.uniform(20,30))
-count = 0
-while True:
-
-    current_url = browser.current_url
+for url in urls:
+    if redisKeysSet.sismember(u'friends', url):
+        continue
     try:
+        browser = getPage(browser, url)
+        time.sleep(random.uniform(7,10))
+        browser.find_element_by_xpath('//td/a[@bpfilter="page_frame"]//span[contains(text(), "关注")]').click()
+        time.sleep(random.uniform(7,10))
         tmpHtml = browser.page_source
-        parsePageInfo(doc,tmpHtml, current_url)
-        # js="var q=document.documentElement.scrollTop=10000"
-        # browser.execute_script(js)
-        # time.sleep(random.uniform(1,5))
-        # tmpHtml = browser.page_source
-        # parsePageInfo(doc,tmpHtml)
-
-        browser.find_element_by_xpath('//a[contains(@class, "page next")]').click()
-        time.sleep(random.uniform(15,40))
+        getAttention(doc,tmpHtml)
+        for i in xrange(4):
+            print i
+            browser.find_element_by_xpath('//a[contains(@class, "page next")]/span[contains(text(), "下一页")]').click()
+            time.sleep(random.uniform(7,10))
+            tmpHtml = browser.page_source
+            getAttention(doc,tmpHtml)
+        time.sleep(random.uniform(7,30))
+        browser.find_element_by_xpath('//li/a[@bpfilter="page"]//span[contains(text(), "的粉丝")]').click()
+        time.sleep(random.uniform(7,10))
+        tmpHtml = browser.page_source
+        getFollow(doc,tmpHtml)
+        for i in xrange(4):
+            print i
+            browser.find_element_by_xpath('//a[contains(@class, "page next")]/span[contains(text(), "下一页")]').click()
+            time.sleep(random.uniform(7,10))
+            tmpHtml = browser.page_source
+            getFollow(doc,tmpHtml)
+        redisKeysSet.sadd(u'friends', url)
     except Exception, e:
-        time.sleep(random.uniform(5,30))
-        nextPage = re.findall('下一页', tmpHtml, re.S)
-        if nextPage:
-            browser = getPage(browser, current_url)
-        else:
-            url = genUrl(current_url)
-            browser = getPage(browser, url)
-        time.sleep(random.uniform(20,26))
+        continue
 
 browser.quit()
 
