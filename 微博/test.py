@@ -178,7 +178,7 @@ browser = loginWeibo()
 
 
 while True:
-    tt = docB.find({}, {u'user_uid':1, u'url':1})
+    tt = docB.find({}, {u'user_uid':1, u'url':1}).sort(u'user_uid',1)
     for uid in tt:
         url= uid[u'url'].split(uid[u'user_uid'])[0] + uid[u'user_uid']
         if redisKeysSet.sismember(u'friends', url):
