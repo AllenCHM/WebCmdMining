@@ -118,26 +118,26 @@ def getFollow(doc, html):
         doc.update({u'uid':item[u'uid']}, {'$addToSet':{u'follows':t}})
 
 def loginWeibo():
-    myProxy = "120.27.94.31:34567"
+    # myProxy = "120.27.94.31:34567"
+    #
+    # proxy = Proxy({
+    #     'proxyType': ProxyType.MANUAL,
+    #     'httpProxy': myProxy,
+    #     'ftpProxy': myProxy,
+    #     'sslProxy': myProxy,
+    #     'noProxy': '' # set this value as desired
+    #     })
 
-    proxy = Proxy({
-        'proxyType': ProxyType.MANUAL,
-        'httpProxy': myProxy,
-        'ftpProxy': myProxy,
-        'sslProxy': myProxy,
-        'noProxy': '' # set this value as desired
-        })
+    # browser = webdriver.Firefox(proxy=proxy)
 
-    browser = webdriver.Firefox(proxy=proxy)
-
-    # browser = webdriver.Firefox()
+    browser = webdriver.Firefox()
     browser.get(u'http://s.weibo.com/weibo/%25E8%25BD%25AC%25E5%259F%25BA%25E5%259B%25A0%25E9%25A3%259F%25E5%2593%2581&nodup=1')
-    time.sleep(20)
+    time.sleep(10)
     browser.find_element_by_xpath(u'//p[@class="tips_co"]//a[@action-type="login"]').click()
     time.sleep(10)
     browser.find_element_by_xpath(u'//div[@class="tab_bar"]//a[@node-type="login_tab"]').click()
     time.sleep(5)
-    browser.find_element_by_xpath(u'//div[@node-type="username_box"]//input[@class="W_input"]').send_keys('15232947423')
+    browser.find_element_by_xpath(u'//div[@node-type="username_box"]//input[@class="W_input"]').send_keys('15733285247')
     browser.find_element_by_xpath(u'//div[@node-type="password_box"]//input[@class="W_input"]').send_keys('a123456')
     raw_input('ok')
     # browser.find_element_by_xpath(u'//div[@class="item_btn"]//a[@action-type="btn_submit"]').click()
@@ -188,6 +188,7 @@ def genUrl(url):
 
 
 browser = loginWeibo()
+
 tt = docB.find({}, {u'user_uid':1, u'url':1}).sort(u'user_uid',1)
 urls = []
 for uid in tt:
