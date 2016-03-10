@@ -28,7 +28,8 @@ import pymongo
 import redis
 
 redisKeysSet = redis.Redis(u'139.129.6.66', port=16379, db=10, password='xnccm316461465')
-client = pymongo.MongoClient('mongodb://192.168.2.165,192.168.3.132,192.168.4.129/?replicaSet=mongo')
+# client = pymongo.MongoClient('mongodb://192.168.2.165,192.168.3.132,192.168.4.129/?replicaSet=mongo')
+client = pymongo.MongoClient('localhost')
 db = client[u'wss']
 doc = db[u'friends']
 docB = db[u'docB']
@@ -53,25 +54,31 @@ while True:
         parseHtml(browser.page_source)
         js="var q=document.documentElement.scrollTop=10000"
         browser.execute_script(js)
-        time.sleep(random.uniform(1,5))
+        time.sleep(random.uniform(15,35))
         parseHtml(browser.page_source)
         count = 0
         while True:
             count += 1
             print count
+
+
             if u"下一頁" not in browser.page_source:
                 break
             try:
-                browser.find_element_by_xpath('//div[@class="pageBar"]//a[contains(text(), "下一頁")]').click()
-            except:
                 browser.find_element_by_xpath('//div[@id="cboxClose"]').click()
                 browser.find_element_by_xpath('//div[@class="pageBar"]//a[contains(text(), "下一頁")]').click()
+            except:
+                browser.find_element_by_xpath('//div[@class="pageBar"]//a[contains(text(), "下一頁")]').click()
 
-            time.sleep(random.uniform(7,15))
+            time.sleep(random.uniform(15,35))
+            if u'Error 423 Unknown Error'  in browser.page_source:
+                time.sleep(random.uniform(17,65))
+                browser.get(browser.current_url)
+                time.sleep(random.uniform(7,15))
             parseHtml(browser.page_source)
             js="var q=document.documentElement.scrollTop=10000"
             browser.execute_script(js)
-            time.sleep(random.uniform(1,5))
+            time.sleep(random.uniform(16,35))
             parseHtml(browser.page_source)
         redisKeysSet.sadd(u'friends', url)
         redisKeysSet.srem(u'friendsLock', url)
